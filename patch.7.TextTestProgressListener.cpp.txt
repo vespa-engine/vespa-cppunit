@@ -1,0 +1,12 @@
+# Copyright 2018 Yahoo Holdings. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+--- TextTestProgressListener.cpp	2015-12-08 23:08:20.643298309 +0000
++++ src/cppunit/TextTestProgressListener.cpp	2015-12-08 23:09:16.364023536 +0000
+@@ -26,7 +26,7 @@
+
+ CPPUNIT_NS_BEGIN
+
+-std::auto_ptr<TextTestProgressListener::TestStartHook> TextTestProgressListener::startHook;
++std::unique_ptr<TextTestProgressListener::TestStartHook> TextTestProgressListener::startHook;
+ bool TextTestProgressListener::verboseProgress = false;
+ uint64_t TextTestProgressListener::startTime = 0;
+ uint32_t TextTestProgressListener::nameLen = 0;

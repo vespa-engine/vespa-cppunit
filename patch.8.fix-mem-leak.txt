@@ -1,0 +1,23 @@
+# Copyright 2018 Yahoo Holdings. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+--- src/cppunit/TestSuite.cpp.orig	2016-06-01 15:20:23.045530770 +0200
++++ src/cppunit/TestSuite.cpp	2016-06-01 15:23:33.029959476 +0200
+@@ -45,14 +45,16 @@
+ {
+     CppUnitVector<Test *> remaining;
+     for (uint32_t i=0; i<m_tests.size(); ++i) {
+-        if (!m_tests[i]->filter(f)) {
++        if (m_tests[i]->filter(f) || (m_tests[i]->getType() == Test::DISABLED)) {
+             if (m_tests[i]->getType() == Test::DISABLED) {
+                 ++disabledTests;
+-            } else {
++            }
++            delete m_tests[i];
++            m_tests[i] = 0;
++        } else {
+             remaining.push_back(m_tests[i]);
+         }
+     }
+-    }
+     remaining.swap(m_tests);
+     return false;
+ }
