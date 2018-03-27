@@ -1,0 +1,111 @@
+# Copyright 2018 Yahoo Holdings. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+# Allow for some fuzz
+%global _default_patch_fuzz 2
+
+# Disable build id note requirement for now
+%undefine _missing_build_ids_terminate_build
+
+# Force special prefix for Vespa
+%define _prefix /opt/vespa-cppunit
+
+# Version
+%define ver_major _TMPL_VER_MAJOR
+%define ver_minor _TMPL_VER_MINOR
+%define ver_patch _TMPL_VER_PATCH
+%define ver_release _TMPL_VER_RELEASE
+
+Name:           vespa-cppunit
+Version:        %{ver_major}.%{ver_minor}.%{ver_patch}
+Release:        %{ver_release}%{?dist}
+Summary: C++ unit testing framework
+License: LGPLv2+
+Group: Development/Libraries
+Url: http://cppunit.sourceforge.net/
+
+Source: http://downloads.sourceforge.net/cppunit/cppunit-%{version}.tar.gz
+
+%if 0%{?centos}
+BuildRequires:  devtoolset-7-gcc-c++
+%define _devtoolset_enable /opt/rh/devtoolset-7/enable
+%endif
+%if 0%{?fedora}
+BuildRequires:  gcc-c++
+BuildRequires:  make
+%endif
+BuildRequires:  doxygen
+
+Patch0: patch.1.progress.txt
+Patch1: patch.2.ignored_and_disabled_tests.txt
+Patch2: patch.3.unique_ptr.txt
+Patch3: patch.4.ExceptionTestCaseDecorator.h.txt
+Patch4: patch.5.Protector.cpp.txt
+Patch5: patch.6.TextTestProgressListener.h.txt
+Patch6: patch.7.TextTestProgressListener.cpp.txt
+Patch7: patch.8.fix-mem-leak.txt
+
+%description
+CppUnit is the C++ port of the famous JUnit framework for unit testing.
+Test output is in XML for automatic testing and GUI based for supervised 
+tests.
+
+This is a patched version for Vespa
+
+%package devel
+Summary: Libraries and headers for cppunit development
+Group: Development/Libraries
+Requires: automake
+Requires: %{name} = %{version}-%{release}
+
+%description devel
+This package contains the libraries and headers necessary for developing
+programs that use cppunit.
+
+This is a patched version for Vespa
+
+%prep
+%setup -q -n cppunit-%{version}
+%patch0 -p0
+%patch1 -p0
+%patch2 -p0
+%patch3 -p0
+%patch4 -p0
+%patch5 -p0
+%patch6 -p0
+%patch7 -p0
+
+%build
+
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+export CXXFLAGS="-std=c++14 -g -O3"
+export LDFLAGS="-Wl,-rpath,%{_prefix}/lib"
+./configure --prefix=%{_prefix}
+make %{_smp_mflags}
+
+%install
+
+rm -rf $RPM_BUILD_ROOT
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+make install DESTDIR=$RPM_BUILD_ROOT
+
+%clean
+
+rm -rf $RPM_BUILD_ROOT
+
+%files
+%defattr(-,root,root,-)
+%{_prefix}/lib/*.so*
+
+%files devel
+%defattr(-,root,root,-)
+%{_includedir}/*
+%{_prefix}/bin/*
+%{_prefix}/lib/*.a 
+%{_prefix}/lib/*.la 
+%{_prefix}/lib/pkgconfig/*.pc
+%{_prefix}/share/*               
+
+%changelog
