@@ -2,9 +2,9 @@
 --- TextTestProgressListener.cpp	2015-12-08 23:08:20.643298309 +0000
 +++ src/cppunit/TextTestProgressListener.cpp	2015-12-08 23:09:16.364023536 +0000
 @@ -26,7 +26,7 @@
-
+ 
  CPPUNIT_NS_BEGIN
-
+ 
 -std::auto_ptr<TextTestProgressListener::TestStartHook> TextTestProgressListener::startHook;
 +std::unique_ptr<TextTestProgressListener::TestStartHook> TextTestProgressListener::startHook;
  bool TextTestProgressListener::verboseProgress = false;

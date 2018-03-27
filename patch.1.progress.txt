@@ -2,9 +2,9 @@
 --- ./include/cppunit/extensions/TestCaseDecorator.h	2002-08-03 17:47:52.000000000 +0200
 +++ ./include/cppunit/extensions/TestCaseDecorator.h	2010-12-13 16:12:35.000000000 +0100
 @@ -29,6 +29,8 @@
-
+ 
    void runTest();
-
+ 
 +  virtual bool filter(const Filter& f) { return m_test->filter(f); }
 +
  protected:
@@ -13,9 +13,9 @@
 --- ./include/cppunit/extensions/TestDecorator.h	2002-08-03 17:47:52.000000000 +0200
 +++ ./include/cppunit/extensions/TestDecorator.h	2010-12-13 16:12:35.000000000 +0100
 @@ -32,6 +32,11 @@
-
+ 
    int getChildTestCount() const;
-
+ 
 +  virtual bool filter(const Filter& f)
 +  {
 +      return !f.include(getName());
@@ -23,49 +23,49 @@
 +
  protected:
    Test *doGetChildTestAt( int index ) const;
-
+ 
 --- ./include/cppunit/TestCaller.h	2002-08-03 17:47:52.000000000 +0200
 +++ ./include/cppunit/TestCaller.h	2010-12-13 16:12:35.000000000 +0100
 @@ -187,6 +187,11 @@
-   	return "TestCaller " + getName();
+   	return "TestCaller " + getName(); 
    }
-
+ 
 +  virtual bool filter(const Filter& f)
 +  {
 +      return !f.include(getName());
 +  }
-+
- private:
-   TestCaller( const TestCaller &other );
++  
+ private: 
+   TestCaller( const TestCaller &other ); 
    TestCaller &operator =( const TestCaller &other );
 --- ./include/cppunit/TestCase.h	2002-08-03 17:47:52.000000000 +0200
 +++ ./include/cppunit/TestCase.h	2010-12-13 16:12:35.000000000 +0100
 @@ -42,6 +42,11 @@
      //! FIXME: this should probably be pure virtual.
      virtual void runTest();
-
+     
 +    virtual bool filter(const Filter& f)
 +    {
 +        return !f.include(getName());
 +    }
-+
++    
  private:
-     TestCase( const TestCase &other );
-     TestCase &operator=( const TestCase &other );
+     TestCase( const TestCase &other ); 
+     TestCase &operator=( const TestCase &other ); 
 --- ./include/cppunit/Test.h	2002-07-12 07:59:57.000000000 +0200
 +++ ./include/cppunit/Test.h	2010-12-13 16:12:35.000000000 +0100
 @@ -3,6 +3,7 @@
-
+ 
  #include <cppunit/Portability.h>
  #include <string>
 +#include <vector>
-
+ 
  CPPUNIT_NS_BEGIN
-
+ 
 @@ -96,6 +97,13 @@
     */
    virtual TestPath resolveTestPath( const std::string &testPath ) const;
-
+ 
 +  /** Use this filter to only run some of the registered tests. */
 +  struct Filter {
 +      virtual ~Filter() {}
@@ -79,9 +79,9 @@
 --- ./include/cppunit/TestSuite.h	2005-07-09 09:42:47.000000000 +0200
 +++ ./include/cppunit/TestSuite.h	2010-12-13 16:12:35.000000000 +0100
 @@ -66,6 +66,8 @@
-
+ 
    Test *doGetChildTestAt( int index ) const;
-
+ 
 +  virtual bool filter(const Filter&);
 +
  private:
@@ -91,17 +91,17 @@
 +++ ./include/cppunit/TextTestProgressListener.h	2010-12-13 16:22:07.000000000 +0100
 @@ -2,6 +2,8 @@
  #define CPPUNIT_TEXTTESTPROGRESSLISTENER_H
-
+ 
  #include <cppunit/TestListener.h>
 +#include <memory>
 +#include <stdint.h>
-
-
+ 
+ 
  CPPUNIT_NS_BEGIN
 @@ -28,6 +30,16 @@
-   void endTestRun( Test *test,
+   void endTestRun( Test *test, 
                     TestResult *eventManager );
-
+ 
 +  struct TestStartHook {
 +      virtual ~TestStartHook() {}
 +      virtual void startedTest(const std::string& testName) = 0;
@@ -123,9 +123,9 @@
  #include <cppunit/TestResult.h>
 -
 +#include <iostream>
-
+ 
  CPPUNIT_NS_BEGIN
-
+ 
 --- ./src/cppunit/TestSuite.cpp	2005-10-13 22:13:16.000000000 +0200
 +++ ./src/cppunit/TestSuite.cpp	2010-12-13 16:12:35.000000000 +0100
 @@ -1,6 +1,7 @@
@@ -133,13 +133,13 @@
  #include <cppunit/TestSuite.h>
  #include <cppunit/TestResult.h>
 +#include <stdint.h>
-
+ 
  CPPUNIT_NS_BEGIN
-
+ 
 @@ -38,6 +39,18 @@
-   m_tests.push_back( test );
+   m_tests.push_back( test ); 
  }
-
+ 
 +bool
 +TestSuite::filter(const Filter& f)
 +{
@@ -152,7 +152,7 @@
 +    remaining.swap(m_tests);
 +    return false;
 +}
-
+ 
  const CppUnitVector<Test *> &
  TestSuite::getTests() const
 --- ./src/cppunit/TextTestProgressListener.cpp	2004-06-25 13:11:45.000000000 +0200
@@ -163,7 +163,7 @@
  #include <cppunit/portability/Stream.h>
 +#include <cppunit/Test.h>
 +#include <sys/time.h>
-
+ 
 +namespace {
 +  uint64_t getTimeInMillis() {
 +      struct timeval t;
@@ -182,18 +182,18 @@
 +      out << " " << result << " " << totalTime << " ms";
 +  }
 +}
-
+ 
  CPPUNIT_NS_BEGIN
-
+ 
 +std::auto_ptr<TextTestProgressListener::TestStartHook> TextTestProgressListener::startHook;
 +bool TextTestProgressListener::verboseProgress = false;
 +uint64_t TextTestProgressListener::startTime = 0;
 +uint32_t TextTestProgressListener::nameLen = 0;
-
+ 
  TextTestProgressListener::TextTestProgressListener()
  {
 @@ -19,14 +43,40 @@
- void
+ void 
  TextTestProgressListener::startTest( Test *test )
  {
 +  if (startTime != 0 && verboseProgress) {
@@ -218,9 +218,9 @@
 +  }
 +  stdCOut().flush();
  }
-
-
- void
+ 
+ 
+ void 
  TextTestProgressListener::addFailure( const TestFailure &failure )
  {
 +  if (verboseProgress) {
@@ -231,10 +231,10 @@
 +  }
 +  stdCOut().flush();
  }
-
-
+ 
+ 
 @@ -34,6 +84,9 @@
- TextTestProgressListener::endTestRun( Test *test,
+ TextTestProgressListener::endTestRun( Test *test, 
                                        TestResult *eventManager )
  {
 +  if (verboseProgress && startTime != 0) {
@@ -248,12 +248,12 @@ diff -ru ./configure cppunit-HEAD.min/cppunit/configure
 +++ ./configure	2011-04-27 20:14:52.000000000 +0000
 @@ -21082,7 +21082,6 @@
  c_name = abi::__cxa_demangle(typeid(instance).name(), 0, 0, &status);
-
+ 
  std::string name(c_name);
 -free(c_name);
-
+ 
  return name == "A<int>";
-
+ 
 diff -ru ./src/cppunit/TextTestProgressListener.cpp cppunit-HEAD.min/cppunit/src/cppunit/TextTestProgressListener.cpp
 --- ./src/cppunit/TextTestProgressListener.cpp	2011-04-27 20:11:40.000000000 +0000
 +++ ./src/cppunit/TextTestProgressListener.cpp	2011-04-27 20:11:31.000000000 +0000
@@ -262,7 +262,7 @@ diff -ru ./src/cppunit/TextTestProgressListener.cpp cppunit-HEAD.min/cppunit/src
  #include <cppunit/Test.h>
  #include <sys/time.h>
 +#include <stdio.h>
-
+ 
  namespace {
    uint64_t getTimeInMillis() {
 diff -ru ./src/cppunit/TypeInfoHelper.cpp cppunit-HEAD.min/cppunit/src/cppunit/TypeInfoHelper.cpp
@@ -270,30 +270,30 @@ diff -ru ./src/cppunit/TypeInfoHelper.cpp cppunit-HEAD.min/cppunit/src/cppunit/T
 +++ ./src/cppunit/TypeInfoHelper.cpp	2011-04-27 20:16:02.000000000 +0000
 @@ -4,6 +4,8 @@
  #if CPPUNIT_HAVE_RTTI
-
+ 
  #include <string>
 +#include <stdio.h>
 +#include <stdlib.h>
-
+ 
  #if CPPUNIT_HAVE_GCC_ABI_DEMANGLE
  #include <cxxabi.h>
-
+ 
 --- ./src/cppunit/Exception.cpp	2005-10-13 22:13:16.000000000 +0200
 +++ ./src/cppunit/Exception.cpp	2012-07-26 15:12:35.000000000 +0100
 @@ -1,5 +1,6 @@
  #include <cppunit/Exception.h>
 +#include <sstream>
-
-
+ 
+ 
  CPPUNIT_NS_BEGIN
-
+ 
 @@ -70,8 +71,12 @@
  const char*
  Exception::what() const throw()
  {
 +  std::ostringstream ost;
    Exception *mutableThis = CPPUNIT_CONST_CAST( Exception *, this );
--  mutableThis->m_whatMessage = m_message.shortDescription() + "\n" +
+-  mutableThis->m_whatMessage = m_message.shortDescription() + "\n" + 
 -                               m_message.details();
 +  ost << m_message.shortDescription() << "\n"
 +      << m_message.details()  // Contains newline

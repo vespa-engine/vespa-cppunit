@@ -9,3 +9,4 @@
 +  static std::unique_ptr<TestStartHook> startHook;
    static uint64_t startTime;
    static uint32_t nameLen;
+ 
