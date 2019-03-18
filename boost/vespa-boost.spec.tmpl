@@ -1,0 +1,107 @@
+# Copyright 2018 Yahoo Holdings. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+# Allow for some fuzz
+%global _default_patch_fuzz 2
+
+# Disable build id note requirement for now
+%undefine _missing_build_ids_terminate_build
+
+# Force special prefix for Vespa
+%define _prefix /opt/vespa-boost
+
+# Version
+%define ver_major _TMPL_VER_MAJOR
+%define ver_minor _TMPL_VER_MINOR
+%define ver_patch _TMPL_VER_PATCH
+%define ver_release _TMPL_VER_RELEASE
+
+Name:           vespa-boost
+Version:        %{ver_major}.%{ver_minor}.%{ver_patch}
+Release:        %{ver_release}%{?dist}
+Summary:        The free peer-reviewed portable C++ source libraries. Built for Vespa.
+URL:            http://www.boost.org
+Group:          System Environment/Libraries
+
+License: Boost and MIT and Python
+
+Source: http://sourceforge.net/projects/boost/files/boost/%{ver_major}.%{ver_minor}.%{ver_patch}/boost_%{ver_major}_%{ver_minor}_%{ver_patch}.tar.bz2
+
+Requires: bzip2%{?_isa}
+Requires: zlib%{?_isa}
+Requires: libicu%{?_isa}
+
+BuildRequires: m4
+BuildRequires: bzip2-devel%{?_isa}
+BuildRequires: zlib-devel%{?_isa}
+BuildRequires: libicu-devel%{?_isa}
+BuildRequires: devtoolset-7-gcc-c++%{?_isa}
+
+Patch0: patches.libs.signals.src.signal_base.diff
+Patch1: patches.no.auto_ptr.diff
+Patch2: patches.predicate.diff
+
+%description
+Boost provides free peer-reviewed portable C++ source libraries.  The
+emphasis is on libraries which work well with the C++ Standard
+Library, in the hopes of establishing "existing practice" for
+extensions and providing reference implementations so that the Boost
+libraries are suitable for eventual standardization. (Some of the
+libraries have already been included in the C++ 2011 standard and
+others have been proposed to the C++ Standards Committee for inclusion
+in future standards.)
+
+This distribution contains the necessary libraries needed for Vespa. The
+original boost distribution has been patched with the included patches.
+
+%package        devel
+Summary:        Headers and libraries for building apps that use vspa-boost
+Group:          Development/Libraries
+Requires:       %{name} = %{version}-%{release}
+
+%description devel
+Contains develompemnt headers and static libraries for vespa-boost.
+
+%prep
+%setup -q -n boost_%{ver_major}_%{ver_minor}_%{ver_patch}
+%patch0 -p0
+%patch1 -p0
+%patch2 -p0
+
+%define _cxxflags '-std=c++14 -DNOT_BOOST_SPIRIT_THREADSAFE=1 -DNOT_PHOENIX_THREADSAFE=1 -DBOOST_NO_AUTO_PTR=1'
+
+%build
+
+source /opt/rh/devtoolset-7/enable || true
+export BOOST_LIBS="iostreams,filesystem,signals,program_options,regex,serialization,system,test,thread,timer,chrono"
+export CXXFLAGS="-std=c++14 -DNOT_BOOST_SPIRIT_THREADSAFE=1 -DNOT_PHOENIX_THREADSAFE=1 -DBOOST_NO_AUTO_PTR=1"
+./bootstrap.sh --with-libraries=$BOOST_LIBS --prefix=%{buildroot}/%{_prefix} 
+./bjam -d+2 %{_smp_mflags} variant=release debug-symbols=on threading=multi link=shared runtime-link=shared dll-path=%{_prefix}/lib cxxflags=%{_cxxflags} --layout=versioned --prefix=%{buildroot}/%{_prefix}
+
+%install
+
+rm -rf $RPM_BUILD_ROOT
+source /opt/rh/devtoolset-7/enable || true
+./bjam -d+2 %{_smp_mflags} variant=release debug-symbols=on threading=multi link=shared runtime-link=shared dll-path=%{_prefix}/lib cxxflags=%{_cxxflags} install --layout=versioned --prefix=%{buildroot}/%{_prefix}
+
+cd %{buildroot}/%{_includedir}
+mv boost-%{ver_major}_%{ver_minor}/boost .
+rm -rf boost-%{ver_major}_%{ver_mainor}
+
+cd %{buildroot}/%{_prefix}/lib
+for i in $(ls *.so); do lnk=$(echo $i | sed "s/-gcc[0-9]*-/-/" | sed "s/-%{ver_major}_%{ver_minor}//"); ln -s $i $lnk; done
+for f in $(ls *\-mt.so); do ln -s "$f" "${f%.*}-d.so"; done
+
+%clean
+
+rm -rf $RPM_BUILD_ROOT
+
+%files
+%defattr(-,root,root,-)
+%doc
+%{_prefix}/lib/*.so*
+
+%files devel
+%defattr(-,root,root,-)
+%{_includedir}/boost
+%{_prefix}/lib/*.a
+
+%changelog
