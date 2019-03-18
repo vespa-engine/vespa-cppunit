@@ -1,0 +1,77 @@
+# Copyright 2018 Yahoo Holdings. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+
+# Disable build id note requirement for now
+%undefine _missing_build_ids_terminate_build
+
+# Force special prefix for Vespa
+%define _prefix /opt/vespa-gtest
+
+# Version
+%define ver_major _TMPL_VER_MAJOR
+%define ver_minor _TMPL_VER_MINOR
+%define ver_patch _TMPL_VER_PATCH
+%define ver_release _TMPL_VER_RELEASE
+
+Summary:        Google C++ testing framework
+Name:           vespa-gtest
+Version:        %{ver_major}.%{ver_minor}.%{ver_patch}
+Release:        %{ver_release}%{?dist}
+License:        BSD
+URL:            https://github.com/google/googletest
+Source0:        https://github.com/google/googletest/archive/release-%{version}.tar.gz
+
+BuildRequires: python2-devel
+%if 0%{?centos}
+%define _devtoolset_enable /opt/rh/devtoolset-7/enable
+BuildRequires: cmake3
+BuildRequires: devtoolset-7-gcc-c++%{?_isa}
+%endif
+%if 0%{?fedora}
+BuildRequires: cmake
+BuildRequires: gcc-c++
+BuildRequires: make
+%endif
+
+%description
+Framework for writing C++ tests on a variety of platforms (GNU/Linux,
+Mac OS X, Windows, Windows CE, and Symbian). Based on the xUnit
+architecture. Supports automatic test discovery, a rich set of
+assertions, user-defined assertions, death tests, fatal and non-fatal
+failures, various options for running the tests, and XML test report
+generation.
+
+%prep
+%setup -q -n googletest-release-%{version}
+
+%build
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+mkdir build && cd build
+cmake3 -DBUILD_SHARED_LIBS=ON \
+       -DCMAKE_CXX_FLAGS="-std=c++14 ${RPM_OPT_FLAGS}" \
+       -DPYTHON_EXECUTABLE=%{__python2} \
+       -Dgtest_build_tests=ON \
+       -DCMAKE_INSTALL_PREFIX=%{_prefix} \
+       -DCMAKE_INSTALL_RPATH=%{_prefix}/lib64 \
+       -DCMAKE_BUILD_WITH_INSTALL_RPATH=true \
+       ..
+make %{?_smp_mflags}
+
+%install
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+cd build
+%make_install
+
+%files
+%license googletest/LICENSE
+%doc googletest/{CHANGES,CONTRIBUTORS,README.md}
+%doc googletest/docs/
+%doc googletest/samples
+%{_includedir}/gtest/
+%{_includedir}/gmock/
+%{_prefix}/lib64/*
+
+%changelog
