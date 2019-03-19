@@ -20,12 +20,16 @@ License:        BSD
 URL:            https://github.com/protocolbuffers/protobuf
 Source0:        https://github.com/protocolbuffers/protobuf/releases/download/v%{version}/protobuf-cpp-%{version}.tar.gz
 
+%if 0%{?centos}
+%define _devtoolset_enable /opt/rh/devtoolset-7/enable
+BuildRequires: devtoolset-7-gcc-c++%{?_isa}
+%endif
+
 %description
 Protocol Buffers (a.k.a., protobuf) are Google's language-neutral,
 platform-neutral, extensible mechanism for serializing structured data.
 
 This package contains protobuf runtime library for C++.
-
 
 %package devel
 Summary:        Protocol Buffers for C++ development
@@ -33,12 +37,6 @@ Requires:       %{name} = %{version}-%{release}
 
 %description devel
 This package contains protobuf compiler for C++ and C++ headers and libraries.
-
-
-%if 0%{?centos}
-%define _devtoolset_enable /opt/rh/devtoolset-7/enable
-BuildRequires: devtoolset-7-gcc-c++%{?_isa}
-%endif
 
 %prep
 %setup -q -n protobuf-%{version}
