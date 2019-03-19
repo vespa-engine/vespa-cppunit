@@ -24,6 +24,10 @@ Source0:        https://github.com/protocolbuffers/protobuf/releases/download/v%
 %define _devtoolset_enable /opt/rh/devtoolset-7/enable
 BuildRequires: devtoolset-7-gcc-c++%{?_isa}
 %endif
+%if 0%{?fedora}
+BuildRequires: gcc-c++
+BuildRequires: make
+%endif
 
 %description
 Protocol Buffers (a.k.a., protobuf) are Google's language-neutral,
