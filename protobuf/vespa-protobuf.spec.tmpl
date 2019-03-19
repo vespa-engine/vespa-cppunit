@@ -1,0 +1,79 @@
+# Copyright 2019 Oath Inc. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+
+# Disable build id note requirement for now
+%undefine _missing_build_ids_terminate_build
+
+# Force special prefix for Vespa
+%define _prefix /opt/vespa-deps
+
+# Version
+%define ver_major _TMPL_VER_MAJOR
+%define ver_minor _TMPL_VER_MINOR
+%define ver_patch _TMPL_VER_PATCH
+%define ver_release _TMPL_VER_RELEASE
+
+Summary:        Protocol Buffers for C++ runtime
+Name:           vespa-protobuf
+Version:        %{ver_major}.%{ver_minor}.%{ver_patch}
+Release:        %{ver_release}%{?dist}
+License:        BSD
+URL:            https://github.com/protocolbuffers/protobuf
+Source0:        https://github.com/protocolbuffers/protobuf/releases/download/v%{version}/protobuf-cpp-%{version}.tar.gz
+
+%description
+Protocol Buffers (a.k.a., protobuf) are Google's language-neutral,
+platform-neutral, extensible mechanism for serializing structured data.
+
+This package contains protobuf runtime library for C++.
+
+
+%package devel
+Summary:        Protocol Buffers for C++ development
+Requires:       %{name} = %{version}-%{release}
+
+%description devel
+This package contains protobuf compiler for C++ and C++ headers and libraries.
+
+
+%if 0%{?centos}
+%define _devtoolset_enable /opt/rh/devtoolset-7/enable
+BuildRequires: devtoolset-7-gcc-c++%{?_isa}
+%endif
+
+%prep
+%setup -q -n protobuf-%{version}
+
+%build
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+mkdir build && cd build
+CXXFLAGS="-std=c++14 -g -O3" \
+../configure --prefix=%{_prefix} --libdir=%{_prefix}/lib64
+make %{?_smp_mflags}
+
+%install
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+cd build
+%make_install
+
+%define _unpackaged_files_terminate_build 0
+
+%files
+%{_libdir}/libprotobuf.so.18*
+%license LICENSE
+
+%files devel
+%dir %{_includedir}/google
+%{_includedir}/google/protobuf/
+%{_libdir}/libprotobuf.a
+%{_libdir}/libprotobuf.so
+%{_libdir}/libprotoc.a
+%{_libdir}/libprotoc.so
+%{_libdir}/pkgconfig/protobuf.pc
+%{_bindir}/protoc
+%license LICENSE
+
+%changelog
