@@ -6,7 +6,7 @@
 %undefine _missing_build_ids_terminate_build
 
 # Force special prefix for Vespa
-%define _prefix /opt/vespa-cppunit
+%define _prefix /opt/vespa-deps
 
 # Version
 %define ver_major _TMPL_VER_MAJOR
@@ -79,8 +79,8 @@ This is a patched version for Vespa
 source %{_devtoolset_enable} || true
 %endif
 export CXXFLAGS="-std=c++14 -g -O3"
-export LDFLAGS="-Wl,-rpath,%{_prefix}/lib"
-./configure --prefix=%{_prefix}
+export LDFLAGS="-Wl,-rpath,%{_prefix}/lib64"
+./configure --prefix=%{_prefix} --libdir=%{_prefix}/lib64
 make %{_smp_mflags}
 
 %install
@@ -97,15 +97,15 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%{_prefix}/lib/*.so*
+%{_prefix}/lib64/*.so*
 
 %files devel
 %defattr(-,root,root,-)
 %{_includedir}/*
 %{_prefix}/bin/*
-%{_prefix}/lib/*.a 
-%{_prefix}/lib/*.la 
-%{_prefix}/lib/pkgconfig/*.pc
+%{_prefix}/lib64/*.a
+%{_prefix}/lib64/*.la
+%{_prefix}/lib64/pkgconfig/*.pc
 %{_prefix}/share/*               
 
 %changelog
