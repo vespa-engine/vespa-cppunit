@@ -25,8 +25,8 @@ Url: http://cppunit.sourceforge.net/
 Source: http://downloads.sourceforge.net/cppunit/cppunit-%{version}.tar.gz
 
 %if 0%{?centos}
-BuildRequires:  devtoolset-7-gcc-c++
-%define _devtoolset_enable /opt/rh/devtoolset-7/enable
+BuildRequires:  devtoolset-8-gcc-c++
+%define _devtoolset_enable /opt/rh/devtoolset-8/enable
 %endif
 %if 0%{?fedora}
 BuildRequires:  gcc-c++
