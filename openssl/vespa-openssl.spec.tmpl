@@ -1,0 +1,73 @@
+# Copyright 2019 Oath Inc. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+
+# Disable build id note requirement for now
+%undefine _missing_build_ids_terminate_build
+
+# Force special prefix for Vespa
+%define _prefix /opt/vespa-deps
+
+# Version
+%define ver_major _TMPL_VER_MAJOR
+%define ver_minor _TMPL_VER_MINOR
+%define ver_patch _TMPL_VER_PATCH
+%define ver_release _TMPL_VER_RELEASE
+
+Summary:        OpenSSL package for Vespa
+Name:           vespa-openssl
+Version:        %{ver_major}.%{ver_minor}.%{ver_patch}
+Release:        %{ver_release}%{?dist}
+License:        Apache License v2
+URL:            https://www.openssl.org
+Source0:        https://www.openssl.org/source/openssl-%{version}.tar.gz
+
+
+%define _devtoolset_enable /opt/rh/devtoolset-8/enable
+BuildRequires: devtoolset-8-gcc-c++%{?_isa}
+
+Patch0: openssl-1.1.1c-upstream-sync.patch
+
+%description
+OpenSSL package for Vespa.
+
+%package devel
+Summary:        OpenSSL dev package for Vespa.
+Requires:       %{name} = %{version}-%{release}
+
+%description devel
+OpenSSL dev package for Vespa.
+
+%prep
+%setup -q -n openssl-%{version}
+%patch0 -p0
+
+%build
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+mkdir build && cd build
+CFLAG="-g -O3" \
+../config --prefix=%{_prefix} --openssldir=%{_prefix}/conf/ssl -Wl,-rpath=%{_prefix}/lib64
+make %{?_smp_mflags}
+
+%install
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+cd build
+%make_install
+
+%define _unpackaged_files_terminate_build 0
+
+%files
+%{_prefix}/bin/
+%{_prefix}/lib64/
+%{_prefix}/conf/ssl/
+%{_prefix}/share/man/
+%license LICENSE
+
+%files devel
+%{_prefix}/include/
+%{_prefix}/lib64/pkgconfig/
+%license LICENSE
+
+%changelog
