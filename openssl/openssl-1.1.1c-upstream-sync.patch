@@ -1,7 +1,7 @@
 diff -up crypto/rand/rand_lib.c.sync crypto/rand/rand_lib.c
 --- crypto/rand/rand_lib.c.sync	2019-05-29 17:20:17.175099183 +0200
 +++ crypto/rand/rand_lib.c	2019-05-30 11:51:20.784850208 +0200
-@@ -232,8 +232,9 @@ size_t rand_drbg_get_nonce(RAND_DRBG *dr
+@@ -239,8 +239,9 @@ size_t rand_drbg_get_nonce(RAND_DRBG *dr
      struct {
          void * instance;
          int count;
