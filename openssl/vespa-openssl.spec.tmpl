@@ -46,7 +46,7 @@ source %{_devtoolset_enable} || true
 %endif
 mkdir build && cd build
 CFLAG="-g -O3" \
-../config --prefix=%{_prefix} --openssldir=%{_prefix}/conf/ssl -Wl,-rpath=%{_prefix}/lib64
+../config --prefix=%{_prefix} --openssldir=%{_prefix}/conf/ssl --libdir=lib64 -Wl,-rpath=%{_prefix}/lib64
 make %{?_smp_mflags}
 
 %install
