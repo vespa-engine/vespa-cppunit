@@ -24,8 +24,6 @@ Source0:        https://www.openssl.org/source/openssl-%{version}.tar.gz
 %define _devtoolset_enable /opt/rh/devtoolset-8/enable
 BuildRequires: devtoolset-8-gcc-c++%{?_isa}
 
-Patch0: openssl-1.1.1c-upstream-sync.patch
-
 %description
 OpenSSL package for Vespa.
 
@@ -38,7 +36,6 @@ OpenSSL dev package for Vespa.
 
 %prep
 %setup -q -n openssl-%{version}
-%patch0 -p0
 
 %build
 %if 0%{?_devtoolset_enable:1}
