@@ -22,9 +22,16 @@ Source0:        https://github.com/google/googletest/archive/release-%{version}.
 
 BuildRequires: python2-devel
 %if 0%{?centos}
+%if 0%{?el7}
 %define _devtoolset_enable /opt/rh/devtoolset-8/enable
 BuildRequires: cmake3
 BuildRequires: devtoolset-8-gcc-c++%{?_isa}
+%endif
+%if 0%{?el8}
+BuildRequires: cmake
+BuildRequires: gcc-c++
+BuildRequires: make
+%endif
 %endif
 %if 0%{?fedora}
 BuildRequires: cmake
