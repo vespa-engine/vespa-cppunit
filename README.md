@@ -2,7 +2,6 @@
 Patched version of software distributions used in Vespa:
 
    * boost
-   * cppunit
    * gtest
    * openssl
    * protobuf
