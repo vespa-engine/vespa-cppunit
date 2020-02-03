@@ -1,0 +1,74 @@
+# Copyright 2020 Oath Inc. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+
+# Disable build id note requirement for now
+%undefine _missing_build_ids_terminate_build
+
+# Force special prefix for Vespa
+%define _prefix /opt/vespa-deps
+
+# Version
+%define ver_major _TMPL_VER_MAJOR
+%define ver_minor _TMPL_VER_MINOR
+%define ver_patch _TMPL_VER_PATCH
+%define ver_release _TMPL_VER_RELEASE
+
+Summary:        ICU package for Vespa
+Name:           vespa-icu
+Version:        %{ver_major}.%{ver_minor}.%{ver_patch}
+Release:        %{ver_release}%{?dist}
+License:        MIT and UCD and Public Domain
+URL:            http://site.icu-project.org/
+Source0:        https://github.com/unicode-org/icu/releases/download/release-%{ver_major}-%{ver_minor}/icu4c-%{ver_major}_%{ver_minor}-src.tgz
+
+
+%define _devtoolset_enable /opt/rh/devtoolset-8/enable
+BuildRequires: devtoolset-8-gcc-c++%{?_isa}
+BuildRequires: doxygen
+BuildRequires: autoconf
+BuildRequires: python3
+
+%description
+ICU package for Vespa.
+
+%package devel
+Summary:        ICU dev package for Vespa.
+Requires:       %{name} = %{version}-%{release}
+Requires:       pkgconfig
+
+%description devel
+ICU dev package for Vespa.
+
+%prep
+%setup -q -n icu
+
+%build
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+cd source
+mkdir build && cd build
+CFLAG="-g -O3" \
+../configure --prefix=%{_prefix} --libdir=%{_prefix}/lib64
+make %{?_smp_mflags}
+
+%install
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+cd source/build
+%make_install
+
+%files
+%{_prefix}/bin/
+%{_prefix}/lib64/
+%{_prefix}/sbin/
+%{_prefix}/share/icu/%{ver_major}.%{ver_minor}/
+%{_prefix}/share/man/
+%license LICENSE
+
+%files devel
+%{_prefix}/include/
+%{_prefix}/lib64/pkgconfig/
+%license LICENSE
+
+%changelog
