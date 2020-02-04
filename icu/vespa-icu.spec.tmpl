@@ -48,7 +48,7 @@ source %{_devtoolset_enable} || true
 cd source
 mkdir build && cd build
 CFLAG="-g -O3" \
-../configure --prefix=%{_prefix} --libdir=%{_prefix}/lib64
+../configure --prefix=%{_prefix} --libdir=%{_prefix}/lib64 --enable-rpath
 make %{?_smp_mflags}
 
 %install
