@@ -1,0 +1,45 @@
+# Copyright Verizon Media. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+
+# Disable build id note requirement for now
+%undefine _missing_build_ids_terminate_build
+
+# Force special prefix for Vespa
+%define _prefix /opt/vespa-deps
+
+# Version
+%define ver_major _TMPL_VER_MAJOR
+%define ver_minor _TMPL_VER_MINOR
+%define ver_patch _TMPL_VER_PATCH
+%define ver_release _TMPL_VER_RELEASE
+
+Summary:        Telegraf
+Name:           vespa-telegraf
+Version:        %{ver_major}.%{ver_minor}.%{ver_patch}
+Release:        %{ver_release}%{?dist}
+License:        MIT
+URL:            https://github.com/olaaun/telegraf/tree/vespa-input-plugin
+Source:         https://github.com/olaaun/telegraf/archive/vespa-input-plugin.tar.gz
+BuildRequires:  git
+BuildRequires:  go
+%if 0%{?el8}
+BuildRequires: make
+%endif
+%if 0%{?fedora}
+BuildRequires: make
+%endif
+
+
+%description
+TODO
+
+%prep
+%setup -q -n telegraf-vespa-input-plugin
+
+%build
+make
+
+%install
+make_install
+
+
+%changelog
