@@ -20,14 +20,13 @@ License:        MIT
 URL:            https://github.com/olaaun/telegraf/tree/vespa-input-plugin
 Source:         https://github.com/olaaun/telegraf/archive/vespa-input-plugin.tar.gz
 BuildRequires:  gcc
-BuildRequires:  wget
 
 
 %description
 Telegraf package for Vespa.
 
 %prep
-wget https://dl.google.com/go/go1.14.linux-amd64.tar.gz
+curl -O https://dl.google.com/go/go1.14.linux-amd64.tar.gz
 tar -C /usr/local -xzf go1.14.linux-amd64.tar.gz
 echo "08df79b46b0adf498ea9f320a0f23d6ec59e9003660b4c9c1ce8e5e2c6f823ca go1.14.linux-amd64.tar.gz" | sha256sum -c || exit 1
 %setup -q -n telegraf-vespa-input-plugin
