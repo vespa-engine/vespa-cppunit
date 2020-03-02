@@ -1,0 +1,44 @@
+# Copyright Verizon Media. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+
+# Disable build id note requirement for now
+%undefine _missing_build_ids_terminate_build
+
+# Force special prefix for Vespa
+%define _prefix /opt/vespa-deps
+
+# Version
+%define ver_major _TMPL_VER_MAJOR
+%define ver_minor _TMPL_VER_MINOR
+%define ver_patch _TMPL_VER_PATCH
+%define ver_release _TMPL_VER_RELEASE
+
+Summary:        Telegraf
+Name:           vespa-telegraf
+Version:        %{ver_major}.%{ver_minor}.%{ver_patch}
+Release:        %{ver_release}%{?dist}
+License:        MIT
+URL:            https://github.com/olaaun/telegraf/tree/vespa-input-plugin
+Source:         https://github.com/olaaun/telegraf/archive/vespa-input-plugin.tar.gz
+BuildRequires:  gcc
+
+
+%description
+Telegraf package for Vespa.
+
+%prep
+curl -O https://dl.google.com/go/go1.14.linux-amd64.tar.gz
+tar -C /usr/local -xzf go1.14.linux-amd64.tar.gz
+echo "08df79b46b0adf498ea9f320a0f23d6ec59e9003660b4c9c1ce8e5e2c6f823ca go1.14.linux-amd64.tar.gz" | sha256sum -c || exit 1
+%setup -q -n telegraf-vespa-input-plugin
+
+%build
+env PATH=$PATH:/usr/local/go/bin make
+
+%install
+env PATH=$PATH:/usr/local/go/bin %make_install PREFIX=%{_prefix}
+
+%files
+%{_prefix}/bin/
+%doc
+
+%changelog
