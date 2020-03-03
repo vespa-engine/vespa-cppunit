@@ -21,21 +21,39 @@ URL:            https://github.com/olaaun/telegraf/tree/vespa-input-plugin
 Source:         https://github.com/olaaun/telegraf/archive/vespa-input-plugin.tar.gz
 BuildRequires:  gcc
 
+%if 0%{?el7} || 0%{?fc29}
+%define _golang_tarfile 1
+%else
+BuildRequires:  golang
+%endif
+%if 0%{?el8}
+%global debug_package %{nil}
+%endif
 
 %description
 Telegraf package for Vespa.
 
 %prep
+%if 0%{?_golang_tarfile}
 curl -O https://dl.google.com/go/go1.14.linux-amd64.tar.gz
 echo "08df79b46b0adf498ea9f320a0f23d6ec59e9003660b4c9c1ce8e5e2c6f823ca go1.14.linux-amd64.tar.gz" | sha256sum -c
 tar -xzf go1.14.linux-amd64.tar.gz
+%endif
 %setup -q -n telegraf-vespa-input-plugin
 
 %build
+%if 0%{?_golang_tarfile}
 env PATH=$PATH:%{_builddir}/go/bin make
+%else
+make
+%endif
 
 %install
+%if 0%{?_golang_tarfile}
 env PATH=$PATH:%{_builddir}/go/bin %make_install PREFIX=%{_prefix}
+%else
+%make_install PREFIX=%{_prefix}
+%endif
 
 %files
 %{_prefix}/bin/
