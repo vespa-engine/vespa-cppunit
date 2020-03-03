@@ -27,15 +27,15 @@ Telegraf package for Vespa.
 
 %prep
 curl -O https://dl.google.com/go/go1.14.linux-amd64.tar.gz
-tar -C /usr/local -xzf go1.14.linux-amd64.tar.gz
-echo "08df79b46b0adf498ea9f320a0f23d6ec59e9003660b4c9c1ce8e5e2c6f823ca go1.14.linux-amd64.tar.gz" | sha256sum -c || exit 1
+echo "08df79b46b0adf498ea9f320a0f23d6ec59e9003660b4c9c1ce8e5e2c6f823ca go1.14.linux-amd64.tar.gz" | sha256sum -c
+tar -xzf go1.14.linux-amd64.tar.gz
 %setup -q -n telegraf-vespa-input-plugin
 
 %build
-env PATH=$PATH:/usr/local/go/bin make
+env PATH=$PATH:%{_builddir}/go/bin make
 
 %install
-env PATH=$PATH:/usr/local/go/bin %make_install PREFIX=%{_prefix}
+env PATH=$PATH:%{_builddir}/go/bin %make_install PREFIX=%{_prefix}
 
 %files
 %{_prefix}/bin/
