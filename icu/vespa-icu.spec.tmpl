@@ -21,8 +21,8 @@ URL:            http://site.icu-project.org/
 Source0:        https://github.com/unicode-org/icu/releases/download/release-%{ver_major}-%{ver_minor}/icu4c-%{ver_major}_%{ver_minor}-src.tgz
 
 
-%define _devtoolset_enable /opt/rh/devtoolset-8/enable
-BuildRequires: devtoolset-8-gcc-c++%{?_isa}
+%define _devtoolset_enable /opt/rh/devtoolset-9/enable
+BuildRequires: devtoolset-9-gcc-c++%{?_isa}
 BuildRequires: doxygen
 BuildRequires: autoconf
 BuildRequires: python3
