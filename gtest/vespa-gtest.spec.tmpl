@@ -27,8 +27,10 @@ BuildRequires: cmake3
 BuildRequires: devtoolset-9-gcc-c++%{?_isa}
 %endif
 %if 0%{?el8}
+%define _devtoolset_enable /opt/rh/gcc-toolset-9/enable
 BuildRequires: cmake
-BuildRequires: gcc-c++
+BuildRequires: gcc-toolset-9-gcc-c++
+BuildRequires: gcc-toolset-9-annobin
 BuildRequires: make
 %endif
 %if 0%{?fedora}
