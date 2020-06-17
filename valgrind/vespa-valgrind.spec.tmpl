@@ -1,0 +1,74 @@
+# Copyright Verizon Media. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+
+# Disable build id note requirement for now
+%undefine _missing_build_ids_terminate_build
+
+# Force special prefix for Vespa
+%define _prefix /opt/vespa-deps
+
+# Version
+%define ver_major _TMPL_VER_MAJOR
+%define ver_minor _TMPL_VER_MINOR
+%define ver_patch _TMPL_VER_PATCH
+%define ver_release _TMPL_VER_RELEASE
+
+Summary:        Valgrind compiled for vespa
+Name:           vespa-valgrind
+Version:        %{ver_major}.%{ver_minor}.%{ver_patch}
+Release:        %{ver_release}%{?dist}
+License:        GPLv2+
+URL:            http://www.valgrind.org/
+Source0:        ftp://sourceware.org/pub/valgrind/valgrind-%{version}.tar.bz2
+
+
+%define _devtoolset_enable /opt/rh/devtoolset-9/enable
+%define _devtoolset_gdb /opt/rh/devtoolset-9/root/usr/bin/gdb
+BuildRequires: devtoolset-9-gcc-c++%{?_isa}
+BuildRequires: glibc-devel
+BuildRequires: devtoolset-9-gdb
+BuildRequires: procps
+BuildRequires: perl-generators
+BuildRequires: perl(Getopt::Long)
+BuildRequires: automake
+BuildRequires: autoconf
+BuildRequires: docbook-dtds
+
+%description
+Valgrind compiled for vespa.
+
+%prep
+%setup -q -n valgrind-%{version}
+
+%build
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+./autogen.sh
+
+%undefine _strict_symbol_defs_build
+
+CFLAGS="$(echo " %{optflags} " | sed 's/ -fstack-protector\([-a-z]*\) / / g;s/ -O2 / /g;')"
+export CFLAGS
+
+%configure \
+  --with-mpicc=/bin/false \
+  --enable-only64bit \
+  GDB=%{?_devtoolset_gdb:%{_devtoolset_gdb}}%{!?_devtoolset_gdb:%{_bindir}/gdb}
+
+make %{?_smp_mflags}
+
+%install
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+%make_install
+
+%files
+%dir %{_prefix}
+%{_prefix}/bin/
+%{_prefix}/include/
+%{_prefix}/lib64/
+%{_prefix}/libexec/
+%{_prefix}/share/
+
+%changelog
