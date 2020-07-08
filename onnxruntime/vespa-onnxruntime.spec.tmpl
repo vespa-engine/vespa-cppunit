@@ -1,0 +1,58 @@
+# Copyright Verizon Media. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+
+# Disable build id note requirement for now
+%undefine _missing_build_ids_terminate_build
+
+# Force special prefix for Vespa
+%define _prefix /opt/vespa-deps
+
+# Version
+%define ver_major _TMPL_VER_MAJOR
+%define ver_minor _TMPL_VER_MINOR
+%define ver_patch _TMPL_VER_PATCH
+%define ver_release _TMPL_VER_RELEASE
+
+Summary:        ONNX Runtime package for Vespa
+Name:           vespa-onnxruntime
+Version:        %{ver_major}.%{ver_minor}.%{ver_patch}
+Release:        %{ver_release}%{?dist}
+License:        MIT License
+URL:            https://microsoft.github.io/onnxruntime
+Source0:        https://github.com/microsoft/onnxruntime/releases/download/v1.3.0/onnxruntime-linux-x64-%{version}.tgz
+
+Requires: libgomp
+
+%description
+ONNX Runtime package for Vespa.
+
+%package devel
+Summary:        ONNX Runtime dev package for Vespa.
+Requires:       %{name} = %{version}-%{release}
+
+%description devel
+%{version} dev package for Vespa.
+
+%prep
+%setup -q -n onnxruntime-linux-x64-%{version}
+
+%build
+echo "Using prebuilt binaries."
+
+%install
+rm -rf $RPM_BUILD_ROOT
+mkdir -p %{buildroot}/%{_prefix}/lib64
+mkdir -p %{buildroot}/%{_prefix}/include/onnxruntime
+cp -a lib/*     %{buildroot}/%{_prefix}/lib64
+cp -a include/* %{buildroot}/%{_prefix}/include/onnxruntime/
+
+%define _unpackaged_files_terminate_build 0
+
+%files
+%{_prefix}/lib64/
+%license LICENSE
+
+%files devel
+%{_prefix}/include/
+%license LICENSE
+
+%changelog
