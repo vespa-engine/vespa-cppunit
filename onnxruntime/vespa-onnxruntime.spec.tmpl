@@ -6,6 +6,9 @@
 # Force special prefix for Vespa
 %define _prefix /opt/vespa-deps
 
+# No debug package.
+%global debug_package %{nil}
+
 # Version
 %define ver_major _TMPL_VER_MAJOR
 %define ver_minor _TMPL_VER_MINOR
