@@ -1,0 +1,75 @@
+# Copyright Verizon Media. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+
+# Disable build id note requirement for now
+%undefine _missing_build_ids_terminate_build
+
+# Force special prefix for Vespa
+%define _prefix /opt/vespa-deps
+
+# Version
+%define ver_major _TMPL_VER_MAJOR
+%define ver_minor _TMPL_VER_MINOR
+%define ver_patch _TMPL_VER_PATCH
+%define ver_release _TMPL_VER_RELEASE
+
+Summary:        lz4 compiled for vespa
+Name:           vespa-lz4
+Version:        %{ver_major}.%{ver_minor}.%{ver_patch}
+Release:        %{ver_release}%{?dist}
+License:        GPLv2+ and BSD
+URL:            https://lz4.github.io/lz4/
+Source0:        https://github.com/lz4/lz4/archive/v%{version}/lz4-%{version}.tar.gz
+
+%if 0%{?el7}
+%define _devtoolset_enable /opt/rh/devtoolset-9/enable
+BuildRequires: devtoolset-9-gcc
+%endif
+%if 0%{?el8}
+%define _devtoolset_enable /opt/rh/gcc-toolset-9/enable
+BuildRequires: gcc-toolset-9-gcc
+%endif
+%if 0%{?fedora}
+BuildRequires: gcc
+%endif
+BuildRequires: make
+
+%description
+lz4 compiled for vespa
+
+%package devel
+Summary:        lz4 compiled for vespa -- devel
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description devel
+lz4 compiled for vespa -- devel
+
+%prep
+%setup -n lz4-%{version}
+sed -i 's,-O3,-O3 -g -fno-omit-frame-pointer,g' $(find . -name Makefile -print)
+
+%build
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+%make_build LIBDIR=%{_libdir} PREFIX=%{_prefix}
+
+%install
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+%make_install LIBDIR=%{_libdir} PREFIX=%{_prefix}
+
+%files
+%license programs/COPYING
+%doc NEWS
+%{_bindir}
+%{_mandir}
+%{_libdir}
+%exclude %{_libdir}/*.so
+%exclude %{_libdir}/liblz4.a
+
+%files devel
+%{_includedir}
+%{_libdir}/*.so
+
+%changelog
