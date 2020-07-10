@@ -1,0 +1,87 @@
+# Copyright Verizon Media. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+
+# Disable build id note requirement for now
+%undefine _missing_build_ids_terminate_build
+
+# Force special prefix for Vespa
+%define _prefix /opt/vespa-deps
+
+# Only strip debug info
+%global _find_debuginfo_opts -g
+
+# Version
+%define ver_major _TMPL_VER_MAJOR
+%define ver_minor _TMPL_VER_MINOR
+%define ver_patch _TMPL_VER_PATCH
+%define ver_release _TMPL_VER_RELEASE
+
+Summary:        zstd compiled for vespa
+Name:           vespa-zstd
+Version:        %{ver_major}.%{ver_minor}.%{ver_patch}
+Release:        %{ver_release}%{?dist}
+License:        BSD and GPLv2
+URL:            https://github.com/facebook/zstd
+Source0:        https://github.com/facebook/zstd/archive/v%{version}.tar.gz#/zstd-%{version}.tar.gz
+
+%if 0%{?el7}
+%define _devtoolset_enable /opt/rh/devtoolset-9/enable
+BuildRequires: devtoolset-9-gcc
+%endif
+%if 0%{?el8}
+%define _devtoolset_enable /opt/rh/gcc-toolset-9/enable
+BuildRequires: gcc-toolset-9-gcc
+%endif
+%if 0%{?fedora}
+BuildRequires: gcc
+%endif
+BuildRequires: make
+
+%description
+zstd compiled for vespa
+
+%package -n vespa-libzstd
+Summary:        zstd compiled for vespa -- library
+
+%description -n vespa-libzstd
+zstd compiled for vespa -- library
+
+%package -n vespa-libzstd-devel
+Summary:        zstd compiled for vespa -- devel
+Requires:       vespa-libzstd%{?_isa} = %{version}-%{release}
+
+%description -n vespa-libzstd-devel
+zstd compiled for vespa -- devel
+
+%prep
+%setup -n zstd-%{version}
+sed -i 's,-O3,-O3 -g -fno-omit-frame-pointer,g' $(find . -name Makefile -print)
+
+%build
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+%make_build LIBDIR=%{_libdir} PREFIX=%{_prefix}
+
+%install
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+%make_install LIBDIR=%{_libdir} PREFIX=%{_prefix}
+
+%files
+%license COPYING LICENSE
+%doc CHANGELOG README.md
+%{_bindir}
+%{_mandir}
+
+%files -n vespa-libzstd
+%license COPYING LICENSE
+%{_libdir}
+%exclude %{_libdir}/*.so
+%exclude %{_libdir}/libzstd.a
+
+%files -n vespa-libzstd-devel
+%{_includedir}
+%{_libdir}/*.so
+
+%changelog
