@@ -9,6 +9,11 @@
 # No debug package.
 %global debug_package %{nil}
 
+# Don't provide shared library or pkgconfig
+%global __provides_exclude ^(lib.*\\.so\\.[0-9.]*\\([A-Z._0-9]*\\)\\(64bit\\)|pkgconfig\\(.*)$
+
+%global __requires_exclude ^libonnxruntime\\.so\\.[0-9.]*\\([A-Z._0-9]*\\)\\(64bit\\)$
+
 # Version
 %define ver_major _TMPL_VER_MAJOR
 %define ver_minor _TMPL_VER_MINOR
@@ -21,12 +26,46 @@ Version:        %{ver_major}.%{ver_minor}.%{ver_patch}
 Release:        %{ver_release}%{?dist}
 License:        MIT License
 URL:            https://microsoft.github.io/onnxruntime
-Source0:        https://github.com/microsoft/onnxruntime/releases/download/v1.3.0/onnxruntime-linux-x64-%{version}.tgz
+Source0:        vespa-onnxruntime-%{version}.tar.gz
 
-Requires: libgomp
+%if 0%{?el7}
+%define _devtoolset_enable /opt/rh/devtoolset-9/enable
+BuildRequires: devtoolset-9-gcc-c++%{?_isa}
+BuildRequires: cmake3
+%define _cmake_prog cmake3
+%define _ctest_prog ctest3
+%endif
+%if 0%{?el8}
+%define _devtoolset_enable /opt/rh/gcc-toolset-9/enable
+BuildRequires: gcc-toolset-9-gcc-c++
+BuildRequires: make
+BuildRequires: cmake
+%define _cmake_prog cmake
+%define _ctest_prog ctest
+%endif
+%if 0%{?fedora}
+BuildRequires: gcc-c++
+BuildRequires: make
+BuildRequires: cmake
+BuildRequires: glibc-langpack-en
+%define _cmake_prog cmake
+%define _ctest_prog ctest
+%endif
+BuildRequires: zlib-devel
+BuildRequires: redhat-lsb-core
+BuildRequires: expat-devel
+BuildRequires: libcurl-devel
+BuildRequires: python3-devel
+BuildRequires: python3-numpy
+BuildRequires: libunwind
+BuildRequires: python3-setuptools
+BuildRequires: bzip2
 
 %description
 ONNX Runtime package for Vespa.
+
+See https://github.com/vespa-engine/vespa-3rdparty-deps for details
+about packaging.
 
 %package devel
 Summary:        ONNX Runtime dev package for Vespa.
@@ -35,23 +74,36 @@ Requires:       %{name} = %{version}-%{release}
 %description devel
 %{version} dev package for Vespa.
 
+See https://github.com/vespa-engine/vespa-3rdparty-deps for details
+about packaging.
 %prep
-%setup -q -n onnxruntime-linux-x64-%{version}
+%setup -q
 
 %build
-echo "Using prebuilt binaries."
+
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+
+./build.sh --config RelWithDebInfo --build_shared_lib --parallel --cmake_path %{_cmake_prog} --ctest_path %{_ctest_prog} --skip_submodule_sync --cmake_extra_defines CMAKE_INSTALL_PREFIX=%{_prefix} onnxruntime_DEV_MODE=OFF onnxruntime_USE_OPENMP=OFF
 
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p %{buildroot}/%{_prefix}/lib64
-mkdir -p %{buildroot}/%{_prefix}/include/onnxruntime
-cp -a lib/*     %{buildroot}/%{_prefix}/lib64
-cp -a include/* %{buildroot}/%{_prefix}/include/onnxruntime/
 
-%define _unpackaged_files_terminate_build 0
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+
+make -C build/Linux/RelWithDebInfo DESTDIR=%{buildroot} install
+
+# Compat links with tarfile distribution
+ln -s core/session/onnxruntime_c_api.h %{buildroot}%{_prefix}/include/onnxruntime/onnxruntime_c_api.h
+ln -s core/session/onnxruntime_cxx_api.h %{buildroot}%{_prefix}/include/onnxruntime/onnxruntime_cxx_api.h
+ln -s core/session/onnxruntime_cxx_inline.h %{buildroot}%{_prefix}/include/onnxruntime/onnxruntime_cxx_inline.h
 
 %files
 %{_prefix}/lib64/
+%exclude %{_prefix}/bin/
 %license LICENSE
 
 %files devel
