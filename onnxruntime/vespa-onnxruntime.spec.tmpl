@@ -39,9 +39,9 @@ BuildRequires: cmake3
 %define _devtoolset_enable /opt/rh/gcc-toolset-9/enable
 BuildRequires: gcc-toolset-9-gcc-c++
 BuildRequires: make
-BuildRequires: cmake
-%define _cmake_prog cmake
-%define _ctest_prog ctest
+BuildRequires: glibc-langpack-en
+%define _cmake_prog cmake3
+%define _ctest_prog ctest3
 %endif
 %if 0%{?fedora}
 BuildRequires: gcc-c++
@@ -78,6 +78,34 @@ See https://github.com/vespa-engine/vespa-3rdparty-deps for details
 about packaging.
 %prep
 %setup -q
+
+%if 0%{?el8}
+# Build and install CentOS 7 version of cmake3 on CentOS 8.
+if rpm -q cmake3
+then
+  :
+else
+  dnf -y erase cmake-*
+  if rpm -q libuv-devel
+  then
+    :
+  else
+    rm -rf rpmbuild-libuv
+    dnf download --source libuv
+    dnf -y builddep libuv-*.src.rpm
+    rpmbuild --define="_topdir $(pwd)/rpmbuild-libuv" -rb libuv-*.src.rpm
+    dnf -y install rpmbuild-libuv/RPMS/x86_64/libuv-devel-*.rpm
+    rm -rf rpmbuild-libuv
+  fi
+  rm -rf rpmbuild-cmake3
+  dnf download --disablerepo='*' --enablerepo=epel-source --releasever=7 --source cmake3
+  rpm --define="_topdir $(pwd)/rpmbuild-cmake3" -i cmake3-*.src.rpm
+  dnf -y --enablerepo=PowerTools builddep --define "_without_test --without-test" --define "_without_gui --without-gui" rpmbuild-cmake3/SPECS/cmake3.spec
+ rpmbuild --define="_topdir $(pwd)/rpmbuild-cmake3" --without test --without gui -bb rpmbuild-cmake3/SPECS/cmake3.spec
+  dnf -y install rpmbuild-cmake3/RPMS/x86_64/cmake3*.rpm rpmbuild-cmake3/RPMS/noarch/cmake3*.rpm
+  rm -rf rpmbuild-cmake3
+fi
+%endif
 
 %build
 
