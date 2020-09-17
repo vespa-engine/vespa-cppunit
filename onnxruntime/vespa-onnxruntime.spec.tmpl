@@ -39,9 +39,12 @@ BuildRequires: cmake3
 %define _devtoolset_enable /opt/rh/gcc-toolset-9/enable
 BuildRequires: gcc-toolset-9-gcc-c++
 BuildRequires: make
-BuildRequires: cmake
-%define _cmake_prog cmake
-%define _ctest_prog ctest
+BuildRequires: glibc-langpack-en
+BuildRequires: wget
+%define _cmake_version 3.18.2
+%define _cmake_prefix $(pwd)/cmake-%{_cmake_version}-Linux-x86_64
+%define _cmake_prog %{_cmake_prefix}/bin/cmake
+%define _ctest_prog %{_cmake_prefix}/bin/ctest
 %endif
 %if 0%{?fedora}
 BuildRequires: gcc-c++
@@ -78,6 +81,18 @@ See https://github.com/vespa-engine/vespa-3rdparty-deps for details
 about packaging.
 %prep
 %setup -q
+
+%if 0%{?el8}
+# Download precompiled cmake version on CentOS 8 and RHEL 8 for now.
+if test -f %{cmake_prog}
+then
+  :
+else
+  wget -O /tmp/cmake.tar.gz https://github.com/Kitware/CMake/releases/download/v%{_cmake_version}/cmake-%{_cmake_version}-Linux-x86_64.tar.gz
+  tar xf /tmp/cmake.tar.gz
+  rm -f /tmp/cmake.tar.gz
+fi
+%endif
 
 %build
 
