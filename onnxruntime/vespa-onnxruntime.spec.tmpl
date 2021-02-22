@@ -27,6 +27,7 @@ Release:        %{ver_release}%{?dist}
 License:        MIT License
 URL:            https://microsoft.github.io/onnxruntime
 Source0:        vespa-onnxruntime-%{version}.tar.gz
+Patch0:         patches.thread-include.diff
 
 %if 0%{?el7}
 %define _devtoolset_enable /opt/rh/devtoolset-9/enable
@@ -81,6 +82,7 @@ See https://github.com/vespa-engine/vespa-3rdparty-deps for details
 about packaging.
 %prep
 %setup -q
+%patch0 -p0
 
 %if 0%{?el8}
 # Download precompiled cmake version on CentOS 8 and RHEL 8 for now.
