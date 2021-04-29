@@ -19,10 +19,16 @@ Release:        %{ver_release}%{?dist}
 License:        BSD
 URL:            https://github.com/protocolbuffers/protobuf
 Source0:        https://github.com/protocolbuffers/protobuf/releases/download/v%{version}/protobuf-cpp-%{version}.tar.gz
+Patch0:         patches.protobuf-linker-maps.diff
 
 %if 0%{?el7}
+%if 0%{?amzn}
+BuildRequires: gcc10-c++%{?_isa}
+%define _configure_args CC=gcc10-gcc CXX=gcc10-g++
+%else
 %define _devtoolset_enable /opt/rh/devtoolset-9/enable
 BuildRequires: devtoolset-9-gcc-c++%{?_isa}
+%endif
 %endif
 %if 0%{?el8}
 %define _devtoolset_enable /opt/rh/gcc-toolset-9/enable
@@ -49,6 +55,9 @@ This package contains protobuf compiler for C++ and C++ headers and libraries.
 
 %prep
 %setup -q -n protobuf-%{version}
+%if 0%{?el7} && 0%{?amzn}
+%patch0 -p0
+%endif
 
 %build
 %if 0%{?_devtoolset_enable:1}
@@ -56,7 +65,7 @@ source %{_devtoolset_enable} || true
 %endif
 mkdir build && cd build
 CXXFLAGS="-std=c++14 -g -O3" \
-../configure --prefix=%{_prefix} --libdir=%{_prefix}/lib64
+../configure --prefix=%{_prefix} --libdir=%{_prefix}/lib64 %{?_configure_args}
 make %{?_smp_mflags}
 
 %install
