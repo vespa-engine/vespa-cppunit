@@ -1,0 +1,85 @@
+# Copyright Verizon Media. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+
+# Disable build id note requirement for now
+%undefine _missing_build_ids_terminate_build
+
+# Force special prefix for Vespa
+%define _prefix /opt/vespa-deps
+
+# No debug package.
+%global debug_package %{nil}
+
+# Don't provide shared library or pkgconfig
+%global __provides_exclude ^(lib.*\\.so\\.[0-9]*\\(\\)\\(64bit\\)|pkgconfig\\(.*)$
+
+%global __requires_exclude ^libxxhash\\.so\\.[0-9.]*\\([A-Z._0-9]*\\)\\(64bit\\)$
+
+# Version
+%define ver_major _TMPL_VER_MAJOR
+%define ver_minor _TMPL_VER_MINOR
+%define ver_patch _TMPL_VER_PATCH
+%define ver_release _TMPL_VER_RELEASE
+
+Summary:        xxhash compiled for vespa
+Name:           vespa-xxhash
+Version:        %{ver_major}.%{ver_minor}.%{ver_patch}
+Release:        %{ver_release}%{?dist}
+License:        GPLv2+ and BSD
+URL:            http://www.xxhash.com/
+Source0:        https://github.com/Cyan4973/xxHash/archive/v%{version}/%{name}-%{version}.tar.gz
+
+%if 0%{?el7}
+%if 0%{?amzn}
+BuildRequires: gcc10%{?_isa}
+%define _toolset_compiler_args CC=gcc10-gcc
+%else
+%define _devtoolset_enable /opt/rh/devtoolset-9/enable
+BuildRequires: devtoolset-9-gcc
+%endif
+%endif
+%if 0%{?el8}
+%define _devtoolset_enable /opt/rh/gcc-toolset-9/enable
+BuildRequires: gcc-toolset-9-gcc
+%endif
+%if 0%{?fedora}
+BuildRequires: gcc
+%endif
+BuildRequires: make
+
+%description
+xxhash compiled for vespa
+
+%package devel
+Summary:        xxhash compiled for vespa -- devel
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description devel
+xxhash compiled for vespa -- devel
+
+%prep
+%setup -n xxHash-%{version}
+
+%build
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+%make_build LIBDIR=%{_libdir} PREFIX=%{_prefix} %{?_toolset_compiler_args}
+
+%install
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+%make_install LIBDIR=%{_libdir} PREFIX=%{_prefix} %{?_toolset_compiler_args}
+
+%files
+%{_bindir}
+%{_mandir}
+%{_libdir}
+%exclude %{_libdir}/*.so
+%exclude %{_libdir}/libxxhash.a
+
+%files devel
+%{_includedir}
+%{_libdir}/*.so
+
+%changelog
