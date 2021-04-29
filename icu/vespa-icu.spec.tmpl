@@ -21,8 +21,13 @@ URL:            http://site.icu-project.org/
 Source0:        https://github.com/unicode-org/icu/releases/download/release-%{ver_major}-%{ver_minor}/icu4c-%{ver_major}_%{ver_minor}-src.tgz
 
 
+%if 0%{amzn}
+BuildRequires: gcc10-c++%{?_isa}
+%define _configure_args CC=gcc10-gcc CXX=gcc10-g++
+%else
 %define _devtoolset_enable /opt/rh/devtoolset-9/enable
 BuildRequires: devtoolset-9-gcc-c++%{?_isa}
+%endif
 BuildRequires: doxygen
 BuildRequires: autoconf
 BuildRequires: python3
@@ -48,7 +53,7 @@ source %{_devtoolset_enable} || true
 cd source
 mkdir build && cd build
 CFLAG="-g -O3" \
-../configure --prefix=%{_prefix} --libdir=%{_prefix}/lib64 --enable-rpath
+../configure --prefix=%{_prefix} --libdir=%{_prefix}/lib64 --enable-rpath %{?_configure_args}
 make %{?_smp_mflags}
 
 %install
