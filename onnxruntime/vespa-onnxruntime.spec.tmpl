@@ -30,8 +30,13 @@ Source0:        vespa-onnxruntime-%{version}.tar.gz
 Patch0:         patches.thread-include.diff
 
 %if 0%{?el7}
+%if 0%{amzn}
+BuildRequires: gcc10-c++%{?_isa}
+%define _toolset_compiler_cmake_args CMAKE_C_COMPILER=gcc10-gcc CMAKE_CXX_COMPILER=gcc10-g++
+%else
 %define _devtoolset_enable /opt/rh/devtoolset-9/enable
 BuildRequires: devtoolset-9-gcc-c++%{?_isa}
+%endif
 BuildRequires: cmake3
 %define _cmake_prog cmake3
 %define _ctest_prog ctest3
@@ -60,7 +65,11 @@ BuildRequires: redhat-lsb-core
 BuildRequires: expat-devel
 BuildRequires: libcurl-devel
 BuildRequires: python3-devel
+%if 0%{amzn}
+BuildRequires: numpy
+%else
 BuildRequires: python3-numpy
+%endif
 BuildRequires: libunwind
 BuildRequires: python3-setuptools
 BuildRequires: bzip2
@@ -102,7 +111,7 @@ fi
 source %{_devtoolset_enable} || true
 %endif
 
-./build.sh --config RelWithDebInfo --build_shared_lib --parallel --cmake_path %{_cmake_prog} --ctest_path %{_ctest_prog} --skip_submodule_sync --cmake_extra_defines CMAKE_INSTALL_PREFIX=%{_prefix} onnxruntime_DEV_MODE=OFF onnxruntime_USE_OPENMP=OFF
+./build.sh --config RelWithDebInfo --build_shared_lib --parallel --cmake_path %{_cmake_prog} --ctest_path %{_ctest_prog} --skip_submodule_sync --cmake_extra_defines CMAKE_INSTALL_PREFIX=%{_prefix} onnxruntime_DEV_MODE=OFF onnxruntime_USE_OPENMP=OFF %{?_toolset_compiler_cmake_args}
 
 %install
 rm -rf $RPM_BUILD_ROOT
