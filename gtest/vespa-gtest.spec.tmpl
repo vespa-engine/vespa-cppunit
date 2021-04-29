@@ -22,9 +22,14 @@ Source0:        https://github.com/google/googletest/archive/release-%{version}.
 
 BuildRequires: python2-devel
 %if 0%{?el7}
+%if 0%{?amzn}
+BuildRequires: gcc10-c++%{?_isa}
+%define _toolset_compiler_cmake_args -DCMAKE_C_COMPILER=gcc10-gcc -DCMAKE_CXX_COMPILER=gcc10-g++
+%else
 %define _devtoolset_enable /opt/rh/devtoolset-9/enable
-BuildRequires: cmake3
 BuildRequires: devtoolset-9-gcc-c++%{?_isa}
+%endif
+BuildRequires: cmake3
 %endif
 %if 0%{?el8}
 %define _devtoolset_enable /opt/rh/gcc-toolset-9/enable
@@ -62,6 +67,7 @@ cmake3 -DBUILD_SHARED_LIBS=ON \
        -DCMAKE_INSTALL_PREFIX=%{_prefix} \
        -DCMAKE_INSTALL_RPATH=%{_prefix}/lib64 \
        -DCMAKE_BUILD_WITH_INSTALL_RPATH=true \
+        %{?_toolset_compiler_cmake_args} \
        ..
 make %{?_smp_mflags}
 
