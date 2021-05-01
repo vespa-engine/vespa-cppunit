@@ -72,6 +72,7 @@ source %{_devtoolset_enable} || true
 %make_install LIBDIR=%{_libdir} PREFIX=%{_prefix} %{?_toolset_compiler_args}
 
 %files
+%license LICENSE
 %{_bindir}
 %{_mandir}
 %{_libdir}
@@ -79,6 +80,7 @@ source %{_devtoolset_enable} || true
 %exclude %{_libdir}/libxxhash.a
 
 %files devel
+%license LICENSE
 %{_includedir}
 %{_libdir}/*.so
 
