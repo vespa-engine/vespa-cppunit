@@ -1,0 +1,105 @@
+# Copyright Verizon Media. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+
+# Disable build id note requirement for now
+%undefine _missing_build_ids_terminate_build
+
+# Force special prefix for Vespa
+%define _prefix /opt/vespa-deps
+
+# Only strip debug info
+%global _find_debuginfo_opts -g
+
+# Don't provide shared library or pkgconfig
+%global __provides_exclude ^(lib.*\\.so\\.[0-9]*\\(\\)\\(64bit\\)|pkgconfig\\(.*)$
+
+%global __requires_exclude ^libopenblas\\.so\\.[0-9.]*\\([A-Z._0-9]*\\)\\(64bit\\)$
+
+# Version
+%define ver_major _TMPL_VER_MAJOR
+%define ver_minor _TMPL_VER_MINOR
+%define ver_patch _TMPL_VER_PATCH
+%define ver_release _TMPL_VER_RELEASE
+
+Summary:        openblas compiled for vespa
+Name:           vespa-openblas
+Version:        %{ver_major}.%{ver_minor}.%{ver_patch}
+Release:        %{ver_release}%{?dist}
+License:        BSD
+URL:            https://github.com/xianyi/OpenBLAS/
+Source0:        https://github.com/xianyi/OpenBLAS/archive/v%{version}/openblas-%{version}.tar.gz
+
+%if 0%{?el7}
+%if 0%{?amzn}
+BuildRequires: gcc10%{?_isa}
+BuildRequires: gcc10-c++%{?_isa}
+BuildRequires: gcc-gfortran
+BuildRequires: perl-devel
+%define _gcc_compiler gcc10-gcc
+%else
+%define _devtoolset_enable /opt/rh/devtoolset-9/enable
+BuildRequires: devtoolset-9-gcc
+BuildRequires: devtoolset-9-gcc-c++
+BuildRequires: devtoolset-9-gcc-gfortran
+BuildRequires: perl-devel
+%endif
+%endif
+%if 0%{?el8}
+%define _devtoolset_enable /opt/rh/gcc-toolset-9/enable
+BuildRequires: gcc-toolset-9-gcc
+BuildRequires: gcc-toolset-9-gcc-c++
+BuildRequires: gcc-toolset-9-gcc-gfortran
+BuildRequires: perl-devel
+%endif
+%if 0%{?fedora}
+BuildRequires: gcc
+BuildRequires: gcc-c++
+BuildRequires: gcc-fortran
+BuildRequires: perl-devel
+%endif
+BuildRequires: make
+
+%description
+openblas compiled for vespa
+
+%package devel
+Summary:        openblas compiled for vespa -- devel
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description devel
+openblas compiled for vespa -- devel
+
+%prep
+%setup -n OpenBLAS-%{version}
+
+%build
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+%ifarch x86_64
+%define _openblas_target CORE2
+%endif
+%ifarch aarch64
+%define _openblas_target ARMV8
+%endif
+%make_build NO_STATIC=1 TARGET=%{?_openblas_target} DYNAMIC_ARCH=1 DYNAMIC_OLDER=1 USE_THREAD=0 USE_OPENMP=0 FC=gfortran CC=%{?_gcc_compiler}%{!?_gcc_compiler:gcc} COMMON_OPT="-O3 -g -fPIC" FCOMMON_OPT="-O3 -g -fPIC -frecursive" LIBPREFIX="libopenblas" INTERFACE64=0
+
+%install
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+%make_install NO_STATIC=1 USE_THREAD=0 PREFIX=%{_prefix} OPENBLAS_LIBRARY_DIR=%{_libdir} OPENBLAS_INCLUDE_DIR=%{_prefix}/include/openblas OPENBLAS_BINARY_DIR=%{_prefix}/bin OPENBLAS_CMAKE_DIR=%{_libdir}/cmake
+
+ln -s openblas/cblas.h %{buildroot}%{_prefix}/include/cblas.h
+ln -s openblas/openblas_config.h %{buildroot}%{_prefix}/include/openblas_config.h
+
+%files
+%{_bindir}
+%{_libdir}
+%exclude %{_libdir}/libopenblas.so
+%exclude %{_libdir}/libopenblas.a
+
+%files devel
+%{_includedir}
+%{_libdir}/libopenblas.so
+
+%changelog
