@@ -1,0 +1,89 @@
+# Copyright Verizon Media. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+
+# Disable build id note requirement for now
+%undefine _missing_build_ids_terminate_build
+
+# Force special prefix for Vespa
+%define _prefix /opt/vespa-deps
+
+# Only strip debug info
+%global _find_debuginfo_opts -g
+
+# Don't provide shared library or pkgconfig
+%global __provides_exclude ^(lib.*\\.so\\.[0-9]*\\(\\)\\(64bit\\)|pkgconfig\\(.*)$
+
+%global __requires_exclude ^libre2\\.so\\.[0-9.]*\\([A-Z._0-9]*\\)\\(64bit\\)$
+
+# Version
+%define ver_major _TMPL_VER_MAJOR
+%define ver_major_long _TMPL_VER_MAJOR_LONG
+%define ver_release _TMPL_VER_RELEASE
+
+Summary:        re2 compiled for vespa
+Name:           vespa-re2
+Version:        %{ver_major}
+Release:        %{ver_release}%{?dist}
+License:        BSD
+URL:            http://github.com/google/re2/
+Source0:        https://github.com/google/re2/archive/%{ver_major_long}.tar.gz
+
+%if 0%{?el7}
+%if 0%{?amzn}
+BuildRequires: gcc10
+BuildRequires: gcc10-c++
+%define _toolset_compiler_args CC=gcc10-gcc CXX=gcc10-g++
+%else
+%define _devtoolset_enable /opt/rh/devtoolset-9/enable
+BuildRequires: devtoolset-9-gcc
+BuildRequires: devtoolset-9-gcc-c++
+%endif
+%endif
+%if 0%{?el8}
+%define _devtoolset_enable /opt/rh/gcc-toolset-9/enable
+BuildRequires: gcc-toolset-9-gcc
+BuildRequires: gcc-toolset-9-gcc-c++
+%endif
+%if 0%{?fedora}
+BuildRequires: gcc
+BuildRequires: gcc-c++
+%endif
+BuildRequires: make
+
+%description
+re2 compiled for vespa
+
+%package devel
+Summary:        re2 compiled for vespa -- devel
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description devel
+re2 compiled for vespa -- devel
+
+%prep
+%setup -n re2-%{ver_major_long}
+
+
+%build
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+%make_build libdir=%{_libdir} includedir=%{_includedir} PREFIX=%{_prefix} %{?_toolset_compiler_args}
+
+%install
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+%make_install libdir=%{_libdir} includedir=%{_includedir} INSTALL="install -p" PREFIX=%{_prefix} %{?_toolset_compiler_args}
+
+%files
+%license LICENSE
+%{_libdir}
+%exclude %{_libdir}/*.so
+%exclude %{_libdir}/libre2.a
+
+%files devel
+%license LICENSE
+%{_includedir}
+%{_libdir}/*.so
+
+%changelog
