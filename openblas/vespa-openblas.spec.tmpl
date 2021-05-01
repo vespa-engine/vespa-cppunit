@@ -93,12 +93,14 @@ ln -s openblas/cblas.h %{buildroot}%{_prefix}/include/cblas.h
 ln -s openblas/openblas_config.h %{buildroot}%{_prefix}/include/openblas_config.h
 
 %files
+%license LICENSE
 %{_bindir}
 %{_libdir}
 %exclude %{_libdir}/libopenblas.so
 %exclude %{_libdir}/libopenblas.a
 
 %files devel
+%license LICENSE
 %{_includedir}
 %{_libdir}/libopenblas.so
 
