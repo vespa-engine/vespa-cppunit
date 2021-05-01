@@ -129,11 +129,13 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
+%license LICENSE_1_0.txt
 %doc
 %{_prefix}/lib64/*.so*
 
 %files devel
 %defattr(-,root,root,-)
+%license LICENSE_1_0.txt
 %{_includedir}/boost
 %{_prefix}/lib64/*.a
 
