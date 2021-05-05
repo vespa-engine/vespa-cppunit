@@ -29,7 +29,7 @@ URL:            http://www.xxhash.com/
 Source0:        https://github.com/Cyan4973/xxHash/archive/v%{version}/%{name}-%{version}.tar.gz
 
 %if 0%{?el7}
-%if 0%{?amzn}
+%if 0%{?amzn2}
 BuildRequires: gcc10%{?_isa}
 %define _toolset_compiler_args CC=gcc10-gcc
 %else

@@ -28,7 +28,7 @@ URL:            http://github.com/google/re2/
 Source0:        https://github.com/google/re2/archive/%{ver_major_long}.tar.gz
 
 %if 0%{?el7}
-%if 0%{?amzn}
+%if 0%{?amzn2}
 BuildRequires: gcc10
 BuildRequires: gcc10-c++
 %define _toolset_compiler_args CC=gcc10-gcc CXX=gcc10-g++
