@@ -22,7 +22,7 @@ Source0:        https://github.com/google/googletest/archive/release-%{version}.
 
 BuildRequires: python2-devel
 %if 0%{?el7}
-%if 0%{?amzn}
+%if 0%{?amzn2}
 BuildRequires: gcc10-c++%{?_isa}
 %define _toolset_compiler_cmake_args -DCMAKE_C_COMPILER=gcc10-gcc -DCMAKE_CXX_COMPILER=gcc10-g++
 %else

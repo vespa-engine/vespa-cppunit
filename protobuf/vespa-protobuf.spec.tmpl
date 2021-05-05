@@ -22,7 +22,7 @@ Source0:        https://github.com/protocolbuffers/protobuf/releases/download/v%
 Patch0:         patches.protobuf-linker-maps.diff
 
 %if 0%{?el7}
-%if 0%{?amzn}
+%if 0%{?amzn2}
 BuildRequires: gcc10-c++%{?_isa}
 %define _configure_args CC=gcc10-gcc CXX=gcc10-g++
 %else
@@ -55,7 +55,7 @@ This package contains protobuf compiler for C++ and C++ headers and libraries.
 
 %prep
 %setup -q -n protobuf-%{version}
-%if 0%{?el7} && 0%{?amzn}
+%if 0%{?el7} && 0%{?amzn2}
 %patch0 -p0
 %endif
 
