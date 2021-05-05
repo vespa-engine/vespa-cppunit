@@ -1,0 +1,125 @@
+# Copyright Verizon Media. Licensed under the terms of the Apache 2.0 license. See LICENSE in the project root.
+
+# Disable build id note requirement for now
+%undefine _missing_build_ids_terminate_build
+
+# Force special prefix for Vespa
+%define _prefix /opt/vespa-deps
+
+# No debug package.
+%global debug_package %{nil}
+
+# Version
+%define ver_major _TMPL_VER_MAJOR
+%define ver_minor _TMPL_VER_MINOR
+%define ver_patch _TMPL_VER_PATCH
+%define ver_release _TMPL_VER_RELEASE
+
+Summary:        pybind11 package for Vespa
+Name:           vespa-pybind11
+Version:        %{ver_major}.%{ver_minor}.%{ver_patch}
+Release:        %{ver_release}%{?dist}
+License:        BSD
+URL:            https://github.com/pybind/pybind11
+Source0:        https://github.com/pybind/pybind11/archive/refs/tags/v%{version}.tar.gz
+
+%if 0%{?el7}
+%define _devtoolset_enable /opt/rh/devtoolset-9/enable
+BuildRequires: devtoolset-9-gcc-c++%{?_isa}
+BuildRequires: cmake3
+%define _cmake_prog cmake3
+BuildRequires: vespa-boost-devel >= 1.59.0-6%{dist}
+BuildRequires: python36-pytest
+BuildRequires: python36-scipy
+%define _cmake_download_catch -DDOWNLOAD_CATCH=ON
+%endif
+%if 0%{?el8}
+%define _devtoolset_enable /opt/rh/gcc-toolset-9/enable
+BuildRequires: gcc-toolset-9-gcc-c++
+BuildRequires: make
+BuildRequires: cmake
+BuildRequires: boost-devel
+BuildRequires: python3-pytest
+BuildRequires: python3-scipy
+%define _cmake_download_catch -DDOWNLOAD_CATCH=ON
+%endif
+%if 0%{?fedora}
+BuildRequires: gcc-c++
+BuildRequires: make
+BuildRequires: cmake
+BuildRequires: boost-devel
+BuildRequires: python3-pytest
+BuildRequires: python3-scipy
+BuildRequires: catch-devel
+%endif
+BuildRequires: python3-devel
+BuildRequires: python3-setuptools
+BuildRequires: eigen3-devel
+
+%global _vespa_3rdparty_deps_packaging_notice \
+See https://github.com/vespa-engine/vespa-3rdparty-deps for details \
+about packaging.
+
+%description
+pybind11 package for Vespa.
+
+%{_vespa_3rdparty_deps_packaging_notice}
+%package devel
+Summary:        pybind11 dev package for Vespa.
+Requires:       %{name} = %{version}-%{release}
+
+%description devel
+pybind11 devel package for Vespa.
+%{_vespa_3rdparty_deps_packaging_notice}
+%prep
+echo preping at $(pwd)
+%if 0%{?el7}
+python3 -m pip install --user --upgrade pip
+python3 -m pip install --user --upgrade setuptools
+python3 -m pip install --user --upgrade pytest
+%endif
+%setup -q -n pybind11-%{version}
+
+%build
+echo building at $(pwd)
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+echo prefix is %{_prefix}
+echo libdir is %{_libdir}
+echo bindir is %{_bindir}
+echo includedir is %{_includedir}
+mkdir build
+cd build
+
+%{?_cmake_prog}%{!?_cmake_prog:cmake} \
+  -DCMAKE_PREFIX_PATH=${_prefix} \
+  -DCMAKE_INSTALL_PREFIX=%{_prefix} \
+  -DCMAKE_INSTALL_RPATH=%{_libdir}  \
+  -DCMAKE_BUILD_WITH_INSTALL_RPATH=true \
+  -DPYBIND11_TEST=ON \
+  -DCMAKE_CXX_STANDARD=17 \
+  %{_cmake_download_catch} \
+  ..
+
+%make_build
+
+%check
+cd build
+make %{_smp_mflags} pytest
+make %{_smp_mflags} cpptest
+make %{_smp_mflags} test_cmake_build
+
+%install
+%if 0%{?_devtoolset_enable:1}
+source %{_devtoolset_enable} || true
+%endif
+
+%make_install -C build DESTDIR=%{buildroot} install
+
+%files devel
+%{_includedir}/
+%{_prefix}/share
+%license LICENSE
+
+%changelog
