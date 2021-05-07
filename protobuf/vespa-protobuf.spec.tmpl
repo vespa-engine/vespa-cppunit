@@ -24,7 +24,7 @@ Patch0:         patches.protobuf-linker-maps.diff
 %if 0%{?el7}
 %if 0%{?amzn2}
 BuildRequires: gcc10-c++%{?_isa}
-%define _configure_args CC=gcc10-gcc CXX=gcc10-g++
+%define _configure_args CC=gcc10-gcc CXX=gcc10-g++ CC_FOR_BUILD=gcc10-gcc CXX_FOR_BUILD=gcc10-g++
 %else
 %define _devtoolset_enable /opt/rh/devtoolset-9/enable
 BuildRequires: devtoolset-9-gcc-c++%{?_isa}
