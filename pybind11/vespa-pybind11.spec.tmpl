@@ -24,13 +24,22 @@ URL:            https://github.com/pybind/pybind11
 Source0:        https://github.com/pybind/pybind11/archive/refs/tags/v%{version}.tar.gz
 
 %if 0%{?el7}
+%if 0%{?amzn2}
+BuildRequires: gcc10-c++%{?_isa}
+%define _toolset_compiler_cmake_args -DCMAKE_C_COMPILER=gcc10-gcc -DCMAKE_CXX_COMPILER=gcc10-g++
+%else
 %define _devtoolset_enable /opt/rh/devtoolset-9/enable
 BuildRequires: devtoolset-9-gcc-c++%{?_isa}
+%endif
 BuildRequires: cmake3
 %define _cmake_prog cmake3
 BuildRequires: vespa-boost-devel >= 1.59.0-6%{dist}
+%if 0%{?amzn2}
+BuildRequires: python3-pytest
+%else
 BuildRequires: python36-pytest
 BuildRequires: python36-scipy
+%endif
 %define _cmake_download_catch -DDOWNLOAD_CATCH=ON
 %endif
 %if 0%{?el8}
@@ -77,6 +86,9 @@ python3 -m pip install --user --upgrade pip
 python3 -m pip install --user --upgrade setuptools
 python3 -m pip install --user --upgrade pytest
 %endif
+%if 0%{?amzn2}
+python3 -m pip install --user scipy
+%endif
 %setup -q -n pybind11-%{version}
 
 %build
@@ -99,6 +111,7 @@ cd build
   -DPYBIND11_TEST=ON \
   -DCMAKE_CXX_STANDARD=17 \
   %{_cmake_download_catch} \
+  %{?_toolset_compiler_cmake_args} \
   ..
 
 %make_build
